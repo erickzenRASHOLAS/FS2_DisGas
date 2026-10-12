@@ -7,6 +7,13 @@ const CATALOGO_PRODUCTOS = [
     { id: 'gas-5', nombre: 'Cilindro 5 kg', categoria: 'Gas', precio: 10800 },
     { id: 'gas-11', nombre: 'Cilindro 11 kg', categoria: 'Gas', precio: 21500 },
     { id: 'gas-15', nombre: 'Cilindro 15 kg', categoria: 'Gas', precio: 27900 },
+
+    // Conectores y accesorios
+    { id: 'acc-regulador', nombre: 'Regulador de gas', categoria: 'Accesorios', precio: 12500 },
+    { id: 'acc-manguera', nombre: 'Manguera para gas 1,5 metros', categoria: 'Accesorios', precio: 5500 },
+    { id: 'acc-conector', nombre: 'Conector de gas', categoria: 'Accesorios', precio: 3500 },
+    { id: 'acc-abrazadera', nombre: 'Abrazadera para manguera', categoria: 'Accesorios', precio: 1200 },
+    { id: 'acc-kit', nombre: 'Kit regulador y manguera', categoria: 'Accesorios', precio: 16900 },
 ];
 
 const Pedido = () => {
