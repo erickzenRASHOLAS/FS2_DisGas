@@ -35,7 +35,7 @@ Al recargar la página la sesión se lee desde `localStorage` y se confirma con 
 
 ```bash
 npm ci
-cp .env.example .env     # VITE_API_URL=http://localhost:8080
+# .env.development ya trae VITE_API_URL=http://localhost:8080
 npm run dev              # http://localhost:5173  (el backend debe estar en el puerto 8080)
 npm run test:run         # pruebas (el backend se simula, no hace falta tenerlo encendido)
 npm run build
@@ -57,7 +57,7 @@ docker compose up --build
 ```
 
 - Tienda: http://localhost:3000 · Swagger: http://localhost:8080/swagger-ui.html · Salud: http://localhost:8080/actuator/health
-- `VITE_API_URL` se graba en el JS al compilar y es la dirección del backend **vista desde el navegador**.
+- `VITE_API_URL` (y `VITE_BASE_PATH`) se graban en el JS al compilar y es la dirección del backend **vista desde el navegador**.
   Para AWS: `VITE_API_URL=http://IP-PUBLICA:8080 docker compose up --build` y ese mismo origen del frontend debe estar en `CORS_ORIGIN` del backend.
 
 ## Cuentas de demostración (backend con `DEMO_USERS=true`)
