@@ -11,13 +11,13 @@ const FILTROS = [['', 'Todas'], ['PENDIENTE', 'Pendientes'], ['EN_RUTA', 'En rut
 
 /**
  * Lista de órdenes (boletas).
- *  - VENDEDOR: solo lectura (lista y detalle).
- *  - ADMINISTRADOR: además cambia el estado y cancela.
+ *  - VENDEDOR y ADMINISTRADOR: ven la lista y el detalle, cambian el estado y cancelan.
+ *  - (El CLIENTE no llega aquí: ve sus pedidos en /mis-pedidos.)
  * El backend vuelve a validar el rol en cada petición; ocultar los botones es solo la parte visual.
  */
 export default function Ordenes() {
   const usuario = useSesion();
-  const esAdmin = usuario?.rol === 'ADMINISTRADOR';
+  const puedeGestionar = usuario?.rol === 'ADMINISTRADOR' || usuario?.rol === 'VENDEDOR';
   const [ordenes, setOrdenes] = useState([]);
   const [filtro, setFiltro] = useState('');
   const [abierta, setAbierta] = useState(null);
@@ -50,12 +50,12 @@ export default function Ordenes() {
 
   const visibles = ordenes.filter((o) => !filtro || o.estado === filtro);
   const activas = ordenes.filter((o) => o.estado === 'PENDIENTE' || o.estado === 'EN_RUTA').length;
-  const columnas = esAdmin ? 7 : 6;
+  const columnas = puedeGestionar ? 7 : 6;
 
   return (
     <section className="space-y-6">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-        <div><p className="text-sm font-bold uppercase tracking-widest text-amber-600">Operaciones</p><h1 className="mt-1 text-3xl font-black text-blue-950">Órdenes</h1><p className="mt-2 text-slate-600">{esAdmin ? 'Revisa los pedidos, cambia su estado o cancélalos.' : 'Consulta la lista de pedidos y su detalle.'}</p></div>
+        <div><p className="text-sm font-bold uppercase tracking-widest text-amber-600">Operaciones</p><h1 className="mt-1 text-3xl font-black text-blue-950">Órdenes</h1><p className="mt-2 text-slate-600">Revisa los pedidos, cambia su estado o cancélalos.</p></div>
         <button onClick={cargar} className="rounded-xl border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 hover:bg-slate-50">Actualizar lista</button>
       </div>
 
@@ -74,7 +74,7 @@ export default function Ordenes() {
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] text-left text-sm">
-            <thead className="bg-blue-950 text-white"><tr>{['Orden / fecha', 'Cliente y dirección', 'Productos', 'Total', 'Estado', 'Detalle'].concat(esAdmin ? ['Acciones'] : []).map((t) => <th key={t} className="px-4 py-3 font-bold">{t}</th>)}</tr></thead>
+            <thead className="bg-blue-950 text-white"><tr>{['Orden / fecha', 'Cliente y dirección', 'Productos', 'Total', 'Estado', 'Detalle'].concat(puedeGestionar ? ['Acciones'] : []).map((t) => <th key={t} className="px-4 py-3 font-bold">{t}</th>)}</tr></thead>
             <tbody className="divide-y divide-slate-100">
               {visibles.map((orden) => <Fragment key={orden.id}>
                 <tr className="hover:bg-slate-50">
@@ -84,7 +84,7 @@ export default function Ordenes() {
                   <td className="whitespace-nowrap px-4 py-4 font-semibold">{formatoPeso(orden.total)}</td>
                   <td className="px-4 py-4"><span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${claseEstado(orden.estado)}`}>{etiquetaEstado(orden.estado)}</span></td>
                   <td className="px-4 py-4"><button onClick={() => setAbierta(abierta === orden.id ? null : orden.id)} aria-expanded={abierta === orden.id} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold hover:bg-slate-50">{abierta === orden.id ? 'Ocultar' : 'Ver detalle'}</button></td>
-                  {esAdmin && <td className="px-4 py-4"><div className="flex flex-col gap-2">
+                  {puedeGestionar && <td className="px-4 py-4"><div className="flex flex-col gap-2">
                     {SIGUIENTE[orden.estado] && <button onClick={() => avanzar(orden)} className="rounded-lg bg-blue-950 px-3 py-2 font-bold text-white hover:bg-blue-900">{TEXTO_AVANZAR[orden.estado]}</button>}
                     {(orden.estado === 'PENDIENTE' || orden.estado === 'EN_RUTA') && <button onClick={() => cancelar(orden)} className="rounded-lg border border-red-200 px-3 py-2 font-bold text-red-700 hover:bg-red-50">Cancelar</button>}
                     {!SIGUIENTE[orden.estado] && orden.estado !== 'PENDIENTE' && orden.estado !== 'EN_RUTA' && <span className="text-slate-400">—</span>}

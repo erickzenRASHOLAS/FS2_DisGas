@@ -20,7 +20,7 @@ services/useSesion.js         hook que re-renderiza la app al iniciar/cerrar ses
 | Pedir cilindro | `/pedido` | CLIENTE, ADMINISTRADOR | `GET /v1/productos`, `POST /v1/boletas` |
 | Mis pedidos | `/mis-pedidos` | CLIENTE | `GET /v1/boletas`, `PUT /v1/boletas/{id}/cancelar` |
 | Mi perfil / Editar | `/perfil`, `/editar-perfil` | CLIENTE, ADMINISTRADOR | `GET/PUT /v1/perfil` |
-| Órdenes | `/ordenes` | VENDEDOR (solo ver), ADMINISTRADOR | `GET /v1/boletas`, `PUT /v1/boletas/{id}/estado` y `/cancelar` |
+| Órdenes | `/ordenes` | VENDEDOR, ADMINISTRADOR (ver, cambiar estado, cancelar) | `GET /v1/boletas`, `PUT /v1/boletas/{id}/estado` y `/cancelar` |
 | Inventario | `/inventario` | VENDEDOR (solo ver), ADMINISTRADOR (CRUD) | `GET /v1/productos/todos`, `GET /v1/categorias`, `POST/PUT/DELETE /v1/productos` |
 | Usuarios | `/admin` | ADMINISTRADOR | `GET/POST/PUT/DELETE /v1/usuarios` |
 
