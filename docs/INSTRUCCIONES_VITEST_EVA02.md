@@ -91,10 +91,8 @@ No registres un test como aprobado ni escribas porcentajes hasta ejecutar los co
 
 ## 8. Tests de inicio incluidos
 
-- `src/services/datosMock.test.js`: lectura, creación y actualización de pedidos, asignación de repartidor, pagos de demostración, inventario, CRUD de usuarios y autenticación.
 - `src/pages/Login.test.jsx`: renderizado, credenciales erróneas, login exitoso y navegación.
 - `src/pages/Inventario.test.jsx`: renderizado, guardar stock y validar stock incorrecto.
-- `src/pages/Operadora.test.jsx`: pedidos mostrados, asignación y actualización de estado.
 
 Los tests son un punto de inicio, no evidencia de cobertura mínima cumplida. Tras la primera ejecución, amplíen pruebas a Registro, Pedido, MisPedidos, Perfil, Administración de usuarios, rutas del repartidor y los demás módulos que el informe muestre con cobertura insuficiente.
 

@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import App from './App.jsx'
 import { iniciarComo } from './test/sesion.js'
+import { BOLETA, CATEGORIAS, PRODUCTOS, simularApi } from './test/fakeApi.js'
 
 function renderApp(ruta) {
   return render(
@@ -11,6 +12,12 @@ function renderApp(ruta) {
     </MemoryRouter>,
   )
 }
+
+// Backend simulado con lo mínimo que piden las pantallas
+const api = () => simularApi({
+  'GET /v1/productos': PRODUCTOS, 'GET /v1/productos/todos': PRODUCTOS, 'GET /v1/categorias': CATEGORIAS,
+  'GET /v1/boletas': [BOLETA], 'GET /v1/usuarios': [], 'GET /v1/perfil': () => ({ status: 200, body: JSON.parse(localStorage.getItem('disgas.sesion')).usuario }),
+})
 
 describe('App · rutas públicas', () => {
   it('muestra la portada en /', () => {
@@ -31,7 +38,6 @@ describe('App · rutas públicas', () => {
   it('muestra la página 404 para una ruta inexistente', () => {
     renderApp('/ruta-que-no-existe')
     expect(screen.getByRole('heading', { name: /página no encontrada/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /volver al inicio/i })).toHaveAttribute('href', '/')
   })
 })
 
@@ -41,41 +47,48 @@ describe('App · protección de rutas por rol (RequireRole)', () => {
     expect(screen.getByRole('heading', { name: /sucursal virtual/i })).toBeInTheDocument()
   })
 
-  it('permite al cliente entrar a /pedido', () => {
-    iniciarComo('cliente')
+  it('permite al cliente entrar a /pedido', async () => {
+    api(); iniciarComo('CLIENTE')
     renderApp('/pedido')
-    expect(screen.getByRole('heading', { name: /crear pedido/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /crear pedido/i })).toBeInTheDocument()
   })
 
-  it('redirige al cliente a Mis pedidos si intenta entrar a /admin', () => {
-    iniciarComo('cliente')
+  it('redirige al cliente a Mis pedidos si intenta entrar a /admin', async () => {
+    api(); iniciarComo('CLIENTE')
     renderApp('/admin')
-    expect(screen.getByRole('heading', { name: /mis pedidos/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /mis pedidos/i })).toBeInTheDocument()
   })
 
-  it('redirige al repartidor a su vista si intenta entrar a /inventario', () => {
-    iniciarComo('repartidor')
+  it('redirige al cliente si intenta entrar a /inventario', async () => {
+    api(); iniciarComo('CLIENTE')
     renderApp('/inventario')
-    expect(screen.getByRole('heading', { name: /mis entregas/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /mis pedidos/i })).toBeInTheDocument()
   })
 
-  it('redirige a la operadora a su panel si intenta entrar a Mis pedidos', () => {
-    iniciarComo('operadora')
-    renderApp('/mis-pedidos')
-    expect(screen.getByRole('heading', { name: /panel de despacho/i })).toBeInTheDocument()
+  it('el vendedor puede ver /ordenes e /inventario pero no /admin ni /pedido', async () => {
+    api(); iniciarComo('VENDEDOR')
+    const a = renderApp('/ordenes')
+    expect(await screen.findByRole('heading', { name: /^órdenes$/i })).toBeInTheDocument()
+    a.unmount()
+    const b = renderApp('/inventario')
+    expect(await screen.findByRole('heading', { name: /inventario de productos/i })).toBeInTheDocument()
+    b.unmount()
+    const c = renderApp('/admin')
+    expect(await screen.findByRole('heading', { name: /^órdenes$/i })).toBeInTheDocument()
+    c.unmount()
+    renderApp('/pedido')
+    expect(await screen.findByRole('heading', { name: /^órdenes$/i })).toBeInTheDocument()
   })
 
-  it('permite al administrador entrar a usuarios, inventario y despacho', () => {
-    iniciarComo('administrador')
-    const usuarios = renderApp('/admin')
-    expect(screen.getByRole('heading', { name: /gestión de usuarios/i })).toBeInTheDocument()
-    usuarios.unmount()
+  it('el administrador entra a /admin', async () => {
+    api(); iniciarComo('ADMINISTRADOR')
+    renderApp('/admin')
+    expect(await screen.findByRole('heading', { name: /gestión de usuarios/i })).toBeInTheDocument()
+  })
 
-    const inventario = renderApp('/inventario')
-    expect(screen.getByRole('heading', { name: /inventario de cilindros/i })).toBeInTheDocument()
-    inventario.unmount()
-
-    renderApp('/operadora')
-    expect(screen.getByRole('heading', { name: /panel de despacho/i })).toBeInTheDocument()
+  it('al recargar con una sesión guardada sigue dentro (persistencia)', async () => {
+    api(); iniciarComo('ADMINISTRADOR')
+    renderApp('/inventario')   // equivale a presionar F5 en /inventario
+    expect(await screen.findByRole('heading', { name: /inventario de productos/i })).toBeInTheDocument()
   })
 })

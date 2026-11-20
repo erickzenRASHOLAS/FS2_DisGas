@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { registrarUsuario } from '../services/datosMock';
+import { authApi } from '../services/servicios';
+import { mensajeDeError } from '../services/api';
 
 const Registro = () => {
     const navigate = useNavigate();
@@ -17,6 +18,7 @@ const Registro = () => {
 
     // Estado para manejar mensajes de éxito o error
     const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
+    const [enviando, setEnviando] = useState(false);
 
     // Manejador de cambios en los inputs
     const handleChange = (e) => {
@@ -28,7 +30,7 @@ const Registro = () => {
     };
 
     // Manejador de envío del formulario
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         // Validaciones básicas
@@ -47,27 +49,23 @@ const Registro = () => {
             return;
         }
 
-        // Construcción del objeto de usuario para el servicio centralizado
-        const nuevoUsuario = {
-            id: Date.now(),
-            nombre: formData.nombre,
-            correo: formData.correo,
-            telefono: formData.telefono,
-            direccion: formData.direccion,
-            password: formData.pass1,
-            rol: 'Cliente'
-        };
-
-        // Guardado en el mock global
-        const exito = registrarUsuario(nuevoUsuario);
-
-        if (exito) {
+        setEnviando(true);
+        try {
+            // POST /v1/auth/registro: el backend siempre crea la cuenta con rol CLIENTE
+            await authApi.registrar({
+                nombre: formData.nombre.trim(),
+                correo: formData.correo.trim(),
+                telefono: formData.telefono.trim(),
+                direccion: formData.direccion.trim(),
+                password: formData.pass1,
+            });
             setMensaje({ tipo: 'exito', texto: '¡Cuenta creada con éxito! Redirigiendo al inicio de sesión...' });
             setTimeout(() => {
                 navigate('/login');
             }, 2000);
-        } else {
-            setMensaje({ tipo: 'error', texto: 'El correo electrónico ya se encuentra registrado.' });
+        } catch (error) {
+            setMensaje({ tipo: 'error', texto: mensajeDeError(error, 'No se pudo crear la cuenta.') });
+            setEnviando(false);
         }
     };
 
@@ -173,8 +171,8 @@ const Registro = () => {
                         />
                     </div>
 
-                    <button type="submit" className="w-full bg-blue-950 hover:bg-blue-900 text-white font-bold py-3 px-4 rounded-xl transition mt-6">
-                        Registrarme
+                    <button type="submit" disabled={enviando} className="w-full bg-blue-950 hover:bg-blue-900 text-white font-bold py-3 px-4 rounded-xl transition mt-6 disabled:cursor-wait disabled:opacity-60">
+                        {enviando ? 'Creando cuenta...' : 'Registrarme'}
                     </button>
                 </form>
 

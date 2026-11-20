@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "predeploy": "npm run build",
+    "predeploy": "vite build --base=/FS2_DisGas/",
     "deploy": "gh-pages -d dist",
     "test": "vitest",
     "test:run": "vitest run",

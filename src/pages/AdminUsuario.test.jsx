@@ -1,111 +1,69 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import AdminUsuarios from './AdminUsuario.jsx'
-import { iniciarComo } from '../test/sesion.js'
-import { obtenerRepartidores, obtenerUsuarios } from '../services/datosMock.js'
+import { error, simularApi } from '../test/fakeApi.js'
+import { iniciarComo, USUARIOS } from '../test/sesion.js'
 
-function llenarFormulario({
-  nombre = 'Luis Torres',
-  correo = 'luis@example.com',
-  telefono = '+56 9 1111 2222',
-  direccion = 'Calle Falsa 123',
-  pass = 'secreto1',
-  rol = 'Cliente',
-} = {}) {
-  fireEvent.change(screen.getByLabelText('Nombre completo'), { target: { value: nombre } })
-  fireEvent.change(screen.getByLabelText('Correo electrónico'), { target: { value: correo } })
-  fireEvent.change(screen.getByLabelText('Teléfono'), { target: { value: telefono } })
-  fireEvent.change(screen.getByLabelText('Dirección'), { target: { value: direccion } })
-  fireEvent.change(screen.getByLabelText('Contraseña temporal'), { target: { value: pass } })
-  fireEvent.change(screen.getByLabelText('Rol'), { target: { value: rol } })
-}
+const LISTA = [USUARIOS.ADMINISTRADOR, USUARIOS.VENDEDOR, USUARIOS.CLIENTE]
 
-const crear = () => fireEvent.click(screen.getByRole('button', { name: 'Crear usuario' }))
-const filaDe = (nombre) => screen.getByText(nombre).closest('tr')
+describe('AdminUsuarios', () => {
+    it('lista los usuarios de GET /v1/usuarios y bloquea las acciones sobre la propia cuenta', async () => {
+        iniciarComo('ADMINISTRADOR')
+        simularApi({ 'GET /v1/usuarios': LISTA })
+        render(<AdminUsuarios />)
+        expect(await screen.findByText('Ana Vendedora')).toBeInTheDocument()
+        expect(screen.getByLabelText(/rol de admin volcán/i)).toBeDisabled()
+        expect(screen.getByLabelText(/rol de ana vendedora/i)).toBeEnabled()
+    })
 
-describe('AdminUsuario · listado', () => {
-  it('muestra los usuarios registrados con su rol y estado', () => {
-    render(<AdminUsuarios />)
-    expect(screen.getByRole('heading', { name: /gestión de usuarios/i })).toBeInTheDocument()
-    expect(screen.getAllByRole('row')).toHaveLength(1 + 5) // encabezado + 5 usuarios de demostración
-    expect(within(filaDe('Carlos Repartidor')).getByText('Repartidor')).toBeInTheDocument()
-    expect(within(filaDe('Admin Volcán')).getByText('Administrador')).toBeInTheDocument()
-  })
-})
+    it('crea un usuario con rol y contraseña (POST /v1/usuarios)', async () => {
+        iniciarComo('ADMINISTRADOR')
+        const llamadas = simularApi({ 'GET /v1/usuarios': LISTA, 'POST /v1/usuarios': { status: 201, body: { id: 9 } } })
+        const user = userEvent.setup()
+        render(<AdminUsuarios />)
+        await screen.findByText('Ana Vendedora')
+        await user.type(screen.getByLabelText(/nombre completo/i), 'Pedro Soto')
+        await user.type(screen.getByLabelText(/correo electrónico/i), 'pedro@volcan.cl')
+        await user.type(screen.getByLabelText(/^teléfono/i), '+56 9 1111 2222')
+        await user.type(screen.getByLabelText(/^dirección/i), 'Chillán')
+        await user.type(screen.getByLabelText(/contraseña temporal/i), 'secreto1')
+        await user.selectOptions(screen.getByLabelText(/^rol$/i), 'VENDEDOR')
+        await user.click(screen.getByRole('button', { name: /crear usuario/i }))
+        await waitFor(() => expect(llamadas.some((l) => l.metodo === 'POST')).toBe(true))
+        expect(llamadas.find((l) => l.metodo === 'POST').body).toMatchObject({ correo: 'pedro@volcan.cl', rol: 'VENDEDOR', activo: true })
+    })
 
-describe('AdminUsuario · crear usuario', () => {
-  it('crea un usuario válido y lo muestra en la tabla', () => {
-    render(<AdminUsuarios />)
-    llenarFormulario({ rol: 'Repartidor' })
-    crear()
+    it('cambia el rol con PUT /v1/usuarios/{id} sin enviar contraseña', async () => {
+        iniciarComo('ADMINISTRADOR')
+        const llamadas = simularApi({ 'GET /v1/usuarios': LISTA, 'PUT /v1/usuarios/3': USUARIOS.CLIENTE })
+        const user = userEvent.setup()
+        render(<AdminUsuarios />)
+        await user.selectOptions(await screen.findByLabelText(/rol de juan pérez/i), 'VENDEDOR')
+        await waitFor(() => expect(llamadas.some((l) => l.metodo === 'PUT')).toBe(true))
+        const body = llamadas.find((l) => l.metodo === 'PUT').body
+        expect(body.rol).toBe('VENDEDOR')
+        expect(body.password).toBeUndefined()
+    })
 
-    expect(screen.getByRole('status')).toHaveTextContent('Usuario creado y guardado en este navegador de demostración.')
-    expect(screen.getAllByRole('row')).toHaveLength(1 + 6)
-    expect(within(filaDe('Luis Torres')).getByText('Repartidor')).toBeInTheDocument()
-    expect(obtenerUsuarios()).toHaveLength(6)
-    expect(obtenerRepartidores().some((usuario) => usuario.correo === 'luis@example.com')).toBe(true)
-    // el formulario se limpia después de crear
-    expect(screen.getByLabelText('Nombre completo')).toHaveValue('')
-  })
+    it('desactiva un usuario', async () => {
+        iniciarComo('ADMINISTRADOR')
+        const llamadas = simularApi({ 'GET /v1/usuarios': LISTA, 'PUT /v1/usuarios/2': USUARIOS.VENDEDOR })
+        const user = userEvent.setup()
+        render(<AdminUsuarios />)
+        const fila = (await screen.findByText('Ana Vendedora')).closest('tr')
+        await user.click(fila.querySelector('button'))
+        await waitFor(() => expect(llamadas.find((l) => l.metodo === 'PUT')?.body.activo).toBe(false))
+    })
 
-  it('valida los campos obligatorios y la longitud de la contraseña', () => {
-    render(<AdminUsuarios />)
-    llenarFormulario({ pass: '123' })
-    fireEvent.submit(screen.getByRole('button', { name: 'Crear usuario' }).closest('form'))
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Completa todos los campos y usa una contraseña de al menos 6 caracteres.',
-    )
-    expect(obtenerUsuarios()).toHaveLength(5)
-  })
-
-  it('informa cuando el correo ya está registrado', () => {
-    render(<AdminUsuarios />)
-    llenarFormulario({ correo: 'juan.perez@email.com' })
-    crear()
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'No se pudo crear el usuario. Comprueba que el correo no esté registrado.',
-    )
-    expect(obtenerUsuarios()).toHaveLength(5)
-  })
-})
-
-describe('AdminUsuario · estado y eliminación', () => {
-  it('desactiva y vuelve a activar un usuario', () => {
-    render(<AdminUsuarios />)
-    fireEvent.click(within(filaDe('María González')).getByRole('button', { name: 'Desactivar' }))
-    expect(screen.getByRole('status')).toHaveTextContent('Estado de usuario actualizado.')
-    expect(within(filaDe('María González')).getByText('Inactivo')).toBeInTheDocument()
-
-    fireEvent.click(within(filaDe('María González')).getByRole('button', { name: 'Activar' }))
-    expect(within(filaDe('María González')).getByText('Activo')).toBeInTheDocument()
-  })
-
-  it('elimina un usuario cuando se confirma la acción', () => {
-    const confirmar = vi.fn(() => true)
-    vi.stubGlobal('confirm', confirmar)
-    render(<AdminUsuarios />)
-    fireEvent.click(within(filaDe('María González')).getByRole('button', { name: 'Eliminar' }))
-
-    expect(confirmar).toHaveBeenCalledWith('¿Eliminar la cuenta de María González?')
-    expect(screen.getByRole('status')).toHaveTextContent('Usuario eliminado.')
-    expect(screen.queryByText('María González')).not.toBeInTheDocument()
-    expect(obtenerUsuarios()).toHaveLength(4)
-  })
-
-  it('conserva al usuario cuando se cancela la confirmación', () => {
-    vi.stubGlobal('confirm', vi.fn(() => false))
-    render(<AdminUsuarios />)
-    fireEvent.click(within(filaDe('María González')).getByRole('button', { name: 'Eliminar' }))
-    expect(screen.getByText('María González')).toBeInTheDocument()
-    expect(obtenerUsuarios()).toHaveLength(5)
-  })
-
-  it('no permite eliminar la propia cuenta', () => {
-    vi.stubGlobal('confirm', vi.fn(() => true))
-    iniciarComo('administrador')
-    render(<AdminUsuarios />)
-    fireEvent.click(within(filaDe('Admin Volcán')).getByRole('button', { name: 'Eliminar' }))
-    expect(screen.getByRole('status')).toHaveTextContent('No puedes eliminar tu propia cuenta desde esta pantalla.')
-    expect(screen.getByText('Admin Volcán')).toBeInTheDocument()
-  })
+    it('elimina un usuario y muestra el 409 del backend', async () => {
+        iniciarComo('ADMINISTRADOR')
+        vi.spyOn(window, 'confirm').mockReturnValue(true)
+        simularApi({ 'GET /v1/usuarios': LISTA, 'DELETE /v1/usuarios/3': error(409, 'El usuario tiene boletas') })
+        const user = userEvent.setup()
+        render(<AdminUsuarios />)
+        const fila = (await screen.findByText('Juan Pérez')).closest('tr')
+        await user.click(fila.querySelectorAll('button')[1])
+        expect(await screen.findByRole('alert')).toHaveTextContent(/tiene boletas/i)
+    })
 })

@@ -23,7 +23,7 @@ describe('Footer', () => {
   it('incluye los accesos rápidos con sus rutas', () => {
     renderFooter()
     expect(screen.getByRole('link', { name: /pide tu cilindro/i })).toHaveAttribute('href', '/')
-    expect(screen.getByRole('link', { name: /panel operadora/i })).toHaveAttribute('href', '/operadora')
+    expect(screen.getByRole('link', { name: /panel de órdenes/i })).toHaveAttribute('href', '/ordenes')
     expect(screen.getByRole('link', { name: /administración/i })).toHaveAttribute('href', '/admin')
     expect(screen.getByRole('link', { name: /acceso trabajadores/i })).toHaveAttribute('href', '/login')
   })

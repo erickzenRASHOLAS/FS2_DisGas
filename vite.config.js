@@ -4,7 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/FS2_DisGas/',
+  // En Docker la app se sirve en la raíz (/). Para GitHub Pages se compila con:  vite build --base=/FS2_DisGas/
+  base: process.env.VITE_BASE ?? '/',
   test: {
     environment: 'jsdom',
     globals: true,

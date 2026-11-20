@@ -1,34 +1,36 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { iniciarSesion } from '../services/datosMock';
+import { authApi } from '../services/servicios';
+import { mensajeDeError } from '../services/api';
 
 const rutasPorRol = {
-  cliente: '/mis-pedidos',
-  repartidor: '/repartidor',
-  operadora: '/operadora',
-  admin: '/admin',
-  administrador: '/admin',
+  CLIENTE: '/mis-pedidos',
+  VENDEDOR: '/ordenes',
+  ADMINISTRADOR: '/admin',
 };
 
 export default function Login() {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
   const navigate = useNavigate();
 
-  const manejarSubmit = (event) => {
+  const manejarSubmit = async (event) => {
     event.preventDefault();
     if (!correo.trim() || !password) {
       setError('Ingresa tu correo y contraseña.');
       return;
     }
-    const resultado = iniciarSesion(correo, password);
-    if (!resultado.exito) {
-      setError(resultado.mensaje);
-      return;
+    setError('');
+    setCargando(true);
+    try {
+      const usuario = await authApi.login(correo, password);   // POST /v1/auth/login
+      navigate(rutasPorRol[usuario.rol] ?? '/mis-pedidos', { replace: true });
+    } catch (e) {
+      setError(mensajeDeError(e, 'No se pudo iniciar sesión.'));
+      setCargando(false);
     }
-    const rol = String(resultado.usuario.rol ?? 'cliente').toLowerCase();
-    navigate(rutasPorRol[rol] ?? '/mis-pedidos', { replace: true });
   };
 
   return (
@@ -50,7 +52,7 @@ export default function Login() {
               <input id="input-password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Ingresa tu contraseña" className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-yellow-500 focus:ring-2 focus:ring-yellow-300" />
             </div>
             {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</p>}
-            <button type="submit" className="w-full rounded-full bg-yellow-400 py-3.5 font-extrabold text-blue-950 shadow-sm transition hover:bg-yellow-300">Ingresar</button>
+            <button type="submit" disabled={cargando} className="w-full rounded-full bg-yellow-400 py-3.5 font-extrabold text-blue-950 shadow-sm transition hover:bg-yellow-300 disabled:cursor-wait disabled:opacity-60">{cargando ? 'Ingresando...' : 'Ingresar'}</button>
           </form>
           <div className="mt-6 text-center text-sm">
             <p className="text-slate-500">¿No tienes cuenta? <Link to="/registro" className="font-bold text-blue-700 hover:underline">Regístrate aquí</Link></p>
@@ -59,10 +61,9 @@ export default function Login() {
           <div className="mt-6 rounded-xl bg-slate-50 p-4 text-xs text-slate-600">
             <p className="font-bold text-slate-800">Cuentas de demostración</p>
             <p className="mt-1">Cliente: juan.perez@email.com / 123456</p>
-            <p>Repartidor: carlos.repartidor@volcan.cl / 123456</p>
-            <p>Operadora: ana.operadora@volcan.cl / 123456</p>
+            <p>Vendedor: ana.vendedora@volcan.cl / 123456</p>
             <p>Administrador: admin@volcan.cl / admin123</p>
-            <p className="mt-2">Solo para pruebas locales. No utilizar contraseñas reales.</p>
+            <p className="mt-2">Disponibles cuando el backend se inicia con DEMO_USERS=true. No utilizar contraseñas reales.</p>
           </div>
         </div>
       </main>

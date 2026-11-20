@@ -1,36 +1,35 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { cerrarSesion, obtenerUsuarioActual } from '../services/datosMock';
+import { authApi } from '../services/servicios';
+import { useSesion } from '../services/useSesion';
+
+// Enlaces del menú y roles que pueden verlos (IE3.3.3: restricciones de acceso en el frontend).
+// El VENDEDOR solo ve productos y órdenes; el CLIENTE solo la tienda; el ADMINISTRADOR toodo.
+export const ENLACES = [
+  { to: '/', texto: 'Inicio' },
+  { to: '/pedido', texto: 'Pedir cilindro', rol: ['CLIENTE', 'ADMINISTRADOR'] },
+  { to: '/mis-pedidos', texto: 'Mis pedidos', rol: ['CLIENTE'] },
+  { to: '/ordenes', texto: 'Órdenes', rol: ['VENDEDOR', 'ADMINISTRADOR'] },
+  { to: '/inventario', texto: 'Inventario', rol: ['VENDEDOR', 'ADMINISTRADOR'] },
+  { to: '/admin', texto: 'Usuarios', rol: ['ADMINISTRADOR'] },
+  { to: '/perfil', texto: 'Mi perfil', rol: ['CLIENTE', 'ADMINISTRADOR'] },
+];
 
 export default function Navbar() {
   const [menuAbierto, setMenuAbierto] = useState(false);
-  const [usuario, setUsuario] = useState(() => obtenerUsuarioActual());
+  const usuario = useSesion();
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setUsuario(obtenerUsuarioActual());
-    setMenuAbierto(false);
-  }, [location.pathname]);
+  useEffect(() => { setMenuAbierto(false); }, [location.pathname]);
 
   const salir = () => {
-    cerrarSesion();
-    setUsuario(null);
+    authApi.logout();
     setMenuAbierto(false);
     navigate('/login');
   };
 
-  const enlaces = [
-    { to: '/', texto: 'Inicio' },
-    { to: '/pedido', texto: 'Pedir cilindro', rol: ['Cliente', 'Administrador', 'admin', 'Operadora'] },
-    { to: '/mis-pedidos', texto: 'Mis pedidos', rol: ['Cliente'] },
-    { to: '/operadora', texto: 'Despacho', rol: ['Operadora', 'Administrador', 'admin'] },
-    { to: '/repartidor', texto: 'Repartidor', rol: ['Repartidor'] },
-    { to: '/inventario', texto: 'Inventario', rol: ['Administrador', 'admin'] },
-    { to: '/admin', texto: 'Usuarios', rol: ['Administrador', 'admin'] },
-    { to: '/perfil', texto: 'Mi perfil', rol: ['Cliente', 'Repartidor', 'Operadora', 'Administrador', 'admin'] },
-  ];
-  const enlacesVisibles = enlaces.filter((enlace) => !enlace.rol || (usuario && enlace.rol.includes(usuario.rol)));
+  const enlacesVisibles = ENLACES.filter((enlace) => !enlace.rol || (usuario && enlace.rol.includes(usuario.rol)));
   const linkClass = ({ isActive }) => `rounded-lg px-3 py-2 text-sm font-semibold transition ${isActive ? 'bg-yellow-400 text-blue-950' : 'text-white hover:bg-blue-900 hover:text-yellow-300'}`;
 
   return (

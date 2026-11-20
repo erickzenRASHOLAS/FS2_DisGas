@@ -1,25 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { obtenerUsuarioActual, crearPedido } from '../services/datosMock';
-
-// Catálogo de productos disponibles
-const CATALOGO_PRODUCTOS = [
-    { id: 'gas-5', nombre: 'Cilindro 5 kg', categoria: 'Gas', precio: 10800 },
-    { id: 'gas-11', nombre: 'Cilindro 11 kg', categoria: 'Gas', precio: 21500 },
-    { id: 'gas-15', nombre: 'Cilindro 15 kg', categoria: 'Gas', precio: 27900 },
-
-    // Conectores y accesorios
-    { id: 'acc-regulador', nombre: 'Regulador de gas', categoria: 'Accesorios', precio: 12500 },
-    { id: 'acc-manguera', nombre: 'Manguera para gas 1,5 metros', categoria: 'Accesorios', precio: 5500 },
-    { id: 'acc-conector', nombre: 'Conector de gas', categoria: 'Accesorios', precio: 3500 },
-    { id: 'acc-abrazadera', nombre: 'Abrazadera para manguera', categoria: 'Accesorios', precio: 1200 },
-    { id: 'acc-kit', nombre: 'Kit regulador y manguera', categoria: 'Accesorios', precio: 16900 },
-];
+import { obtenerUsuarioActual } from '../services/sesion';
+import { boletasApi, productosApi } from '../services/servicios';
+import { mensajeDeError } from '../services/api';
 
 const Pedido = () => {
     const navigate = useNavigate();
 
-    // Datos de despacho
+    // Catálogo: viene del backend (GET /v1/productos), ya no está escrito en el código
+    const [catalogo, setCatalogo] = useState([]);
+    const [cargandoCatalogo, setCargandoCatalogo] = useState(true);
+
+    // Datos de despacho. Nombre y teléfono salen del perfil de la cuenta; la dirección se puede cambiar por pedido.
     const [nombre, setNombre] = useState('');
     const [telefono, setTelefono] = useState('');
     const [direccion, setDireccion] = useState('');
@@ -31,6 +23,7 @@ const Pedido = () => {
     // Lista de productos añadidos al pedido
     const [itemsPedido, setItemsPedido] = useState([]);
     const [error, setError] = useState('');
+    const [enviando, setEnviando] = useState(false);
 
     // Precargar datos del usuario en sesión
     useEffect(() => {
@@ -42,6 +35,27 @@ const Pedido = () => {
         }
     }, []);
 
+    // Cargar el catálogo desde la API
+    useEffect(() => {
+        let activo = true;
+        productosApi.listar()
+            .then((lista) => { if (activo) setCatalogo(lista); })
+            .catch((e) => { if (activo) setError(mensajeDeError(e, 'No se pudo cargar el catálogo.')); })
+            .finally(() => { if (activo) setCargandoCatalogo(false); });
+        return () => { activo = false; };
+    }, []);
+
+    // Productos agrupados por categoría para el selector
+    const categorias = useMemo(() => {
+        const grupos = new Map();
+        catalogo.forEach((p) => {
+            const nombreCategoria = p.categoria?.nombre ?? 'Otros';
+            if (!grupos.has(nombreCategoria)) grupos.set(nombreCategoria, []);
+            grupos.get(nombreCategoria).push(p);
+        });
+        return [...grupos.entries()];
+    }, [catalogo]);
+
     // Agregar producto seleccionado a la lista del pedido
     const agregarAlPedido = () => {
         if (!productoSeleccionadoId) {
@@ -49,15 +63,20 @@ const Pedido = () => {
             return;
         }
 
-        const prodEncontrado = CATALOGO_PRODUCTOS.find(p => p.id === productoSeleccionadoId);
+        const prodEncontrado = catalogo.find(p => String(p.id) === String(productoSeleccionadoId));
         if (!prodEncontrado) return;
 
-        // Si el producto ya existe en la lista, acumular la cantidad
+        // Si el producto ya existe en la lista, acumular la cantidad (sin pasar del stock disponible)
         const existeIndex = itemsPedido.findIndex(item => item.id === prodEncontrado.id);
+        const yaAgregado = existeIndex >= 0 ? itemsPedido[existeIndex].cantidad : 0;
+        if (yaAgregado + cantidadItem > prodEncontrado.stock) {
+            setError(`Solo quedan ${prodEncontrado.stock} unidades de ${prodEncontrado.nombre}.`);
+            return;
+        }
         if (existeIndex >= 0) {
-            const copiaItems = [...itemsPedido];
-            copiaItems[existeIndex].cantidad += cantidadItem;
-            setItemsPedido(copiaItems);
+            setItemsPedido(itemsPedido.map((item, i) =>
+                i === existeIndex ? { ...item, cantidad: item.cantidad + cantidadItem } : item
+            ));
         } else {
             setItemsPedido([
                 ...itemsPedido,
@@ -65,6 +84,7 @@ const Pedido = () => {
                     id: prodEncontrado.id,
                     nombre: prodEncontrado.nombre,
                     precio: prodEncontrado.precio,
+                    stock: prodEncontrado.stock,
                     cantidad: cantidadItem
                 }
             ]);
@@ -84,6 +104,12 @@ const Pedido = () => {
     // Cambiar cantidad directamente en la tabla
     const cambiarCantidadTabla = (id, nuevaCantidad) => {
         if (nuevaCantidad < 1) return;
+        const actual = itemsPedido.find(item => item.id === id);
+        if (actual && nuevaCantidad > actual.stock) {
+            setError(`Solo quedan ${actual.stock} unidades de ${actual.nombre}.`);
+            return;
+        }
+        setError('');
         setItemsPedido(itemsPedido.map(item =>
             item.id === id ? { ...item, cantidad: nuevaCantidad } : item
         ));
@@ -92,11 +118,11 @@ const Pedido = () => {
     // Calcular monto total a pagar
     const totalPedido = itemsPedido.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!nombre.trim() || !telefono.trim() || !direccion.trim()) {
-            setError('Por favor, ingresa los datos completos de despacho.');
+        if (!direccion.trim()) {
+            setError('Ingresa la dirección de despacho.');
             return;
         }
 
@@ -107,30 +133,24 @@ const Pedido = () => {
 
         setError('');
 
-        const usuarioActual = obtenerUsuarioActual();
-        if (!usuarioActual) {
+        if (!obtenerUsuarioActual()) {
             setError('Debes iniciar sesión antes de crear un pedido.');
             navigate('/login');
             return;
         }
 
-        // Resumen formateado para compatibilidad con paneles de Operadora y Repartidor
-        const resumenProductos = itemsPedido.map(i => `${i.cantidad}x ${i.nombre}`).join(', ');
-
-        const nuevoPedidoData = {
-            clienteId: usuarioActual.id,
-            cliente: nombre,
-            telefono: `+56 9 ${telefono}`,
-            direccion: direccion,
-            producto: resumenProductos,
-            items: itemsPedido,
-            total: totalPedido,
-            tipoGas: itemsPedido.some(i => i.id.startsWith('gas')) ? 'Varios' : 'Accesorios'
-        };
-
-        crearPedido(nuevoPedidoData);
-        alert('¡Pedido realizado con éxito!');
-        navigate('/mis-pedidos');
+        setEnviando(true);
+        try {
+            // POST /v1/boletas: solo se envían producto y cantidad; el servidor calcula precios y total y descuenta el stock
+            await boletasApi.crear({
+                direccion: direccion.trim(),
+                items: itemsPedido.map((i) => ({ productoId: i.id, cantidad: i.cantidad })),
+            });
+            navigate('/mis-pedidos', { state: { mensaje: '¡Pedido realizado con éxito!' } });
+        } catch (err) {
+            setError(mensajeDeError(err, 'No se pudo crear el pedido.'));
+            setEnviando(false);
+        }
     };
 
     return (
@@ -151,34 +171,37 @@ const Pedido = () => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Nombre Completo</label>
+                                <label htmlFor="pedido-nombre" className="block text-sm font-bold text-slate-700 mb-1">Nombre Completo</label>
                                 <input
+                                    id="pedido-nombre"
                                     type="text"
                                     value={nombre}
-                                    onChange={(e) => setNombre(e.target.value)}
-                                    placeholder="Ej: Juan Pérez"
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-yellow-400 outline-none text-slate-900 bg-white"
+                                    readOnly
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none text-slate-700 bg-slate-100"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Teléfono Móvil</label>
+                                <label htmlFor="pedido-telefono" className="block text-sm font-bold text-slate-700 mb-1">Teléfono Móvil</label>
                                 <div className="relative">
                                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-sm">+56 9</span>
                                     <input
+                                        id="pedido-telefono"
                                         type="tel"
                                         value={telefono}
-                                        onChange={(e) => setTelefono(e.target.value)}
-                                        placeholder="1234 5678"
-                                        className="w-full pl-14 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-yellow-400 outline-none text-slate-900 bg-white"
+                                        readOnly
+                                        className="w-full pl-14 pr-4 py-2.5 rounded-xl border border-slate-200 outline-none text-slate-700 bg-slate-100"
                                     />
                                 </div>
                             </div>
                         </div>
 
+                        <p className="text-xs text-slate-500">Nombre y teléfono salen de tu cuenta (puedes cambiarlos en Mi perfil).</p>
+
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Dirección de Despacho</label>
+                            <label htmlFor="pedido-direccion" className="block text-sm font-bold text-slate-700 mb-1">Dirección de Despacho</label>
                             <input
+                                id="pedido-direccion"
                                 type="text"
                                 value={direccion}
                                 onChange={(e) => setDireccion(e.target.value)}
@@ -196,33 +219,31 @@ const Pedido = () => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
                             <div className="sm:col-span-7">
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Producto / Accesorio</label>
+                                <label htmlFor="pedido-producto" className="block text-sm font-bold text-slate-700 mb-1">Producto / Accesorio</label>
                                 <select
+                                    id="pedido-producto"
                                     value={productoSeleccionadoId}
                                     onChange={(e) => setProductoSeleccionadoId(e.target.value)}
+                                    disabled={cargandoCatalogo}
                                     className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-yellow-400 outline-none bg-white text-slate-900 font-medium"
                                 >
-                                    <option value="">Selecciona un ítem...</option>
-                                    <optgroup label="Cilindros de Gas">
-                                        {CATALOGO_PRODUCTOS.filter(p => p.categoria === 'Gas').map(prod => (
-                                            <option key={prod.id} value={prod.id}>
-                                                {prod.nombre} - ${prod.precio.toLocaleString('es-CL')}
-                                            </option>
-                                        ))}
-                                    </optgroup>
-                                    <optgroup label="Conectores y Accesorios">
-                                        {CATALOGO_PRODUCTOS.filter(p => p.categoria === 'Accesorios').map(prod => (
-                                            <option key={prod.id} value={prod.id}>
-                                                {prod.nombre} - ${prod.precio.toLocaleString('es-CL')}
-                                            </option>
-                                        ))}
-                                    </optgroup>
+                                    <option value="">{cargandoCatalogo ? 'Cargando catálogo...' : 'Selecciona un ítem...'}</option>
+                                    {categorias.map(([nombreCategoria, productos]) => (
+                                        <optgroup key={nombreCategoria} label={nombreCategoria}>
+                                            {productos.map(prod => (
+                                                <option key={prod.id} value={prod.id} disabled={prod.stock < 1}>
+                                                    {prod.nombre} - ${prod.precio.toLocaleString('es-CL')}{prod.stock < 1 ? ' (sin stock)' : ''}
+                                                </option>
+                                            ))}
+                                        </optgroup>
+                                    ))}
                                 </select>
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Cantidad</label>
+                                <label htmlFor="pedido-cantidad" className="block text-sm font-bold text-slate-700 mb-1">Cantidad</label>
                                 <input
+                                    id="pedido-cantidad"
                                     type="number"
                                     min="1"
                                     max="10"
@@ -276,7 +297,7 @@ const Pedido = () => {
                                                 <input
                                                     type="number"
                                                     min="1"
-                                                    max="20"
+                                                    max={item.stock}
                                                     value={item.cantidad}
                                                     onChange={(e) => cambiarCantidadTabla(item.id, Number(e.target.value))}
                                                     className="w-14 px-2 py-1 border border-slate-300 rounded-lg text-center font-bold text-slate-800"
@@ -290,7 +311,7 @@ const Pedido = () => {
                                                     type="button"
                                                     onClick={() => eliminarItem(item.id)}
                                                     className="text-red-500 hover:text-red-700 transition p-1 cursor-pointer"
-                                                    title="Eliminar ítem"
+                                                    title="Eliminar ítem" aria-label={`Quitar ${item.nombre}`}
                                                 >
                                                     <i className="ph ph-trash text-lg"></i>
                                                 </button>
@@ -323,14 +344,14 @@ const Pedido = () => {
                     {/* BOTÓN CONFIRMAR */}
                     <button
                         type="submit"
-                        disabled={itemsPedido.length === 0}
+                        disabled={itemsPedido.length === 0 || enviando}
                         className={`w-full py-4 rounded-full font-extrabold text-lg transition shadow-md flex justify-center items-center gap-2 cursor-pointer ${
                             itemsPedido.length > 0
                                 ? 'bg-yellow-400 hover:bg-yellow-500 text-blue-950'
                                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                         }`}
                     >
-                        Confirmar Pedido (${totalPedido.toLocaleString('es-CL')}) <i className="ph ph-check-circle text-xl"></i>
+                        {enviando ? 'Enviando pedido...' : `Confirmar Pedido ($${totalPedido.toLocaleString('es-CL')})`} <i className="ph ph-check-circle text-xl"></i>
                     </button>
                 </form>
             </section>

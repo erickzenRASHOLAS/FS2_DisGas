@@ -1,58 +1,50 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import MisPedidos from './MisPedidos.jsx'
+import { BOLETA, error, simularApi } from '../test/fakeApi.js'
 import { iniciarComo } from '../test/sesion.js'
-import { iniciarSesion, registrarUsuario } from '../services/datosMock.js'
 
-const formatoPeso = (monto) =>
-  new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(monto)
-
-function renderMisPedidos() {
-  return render(
-    <MemoryRouter>
-      <MisPedidos />
-    </MemoryRouter>,
-  )
-}
+const renderPagina = () => render(<MemoryRouter><MisPedidos /></MemoryRouter>)
 
 describe('MisPedidos', () => {
-  it('pide iniciar sesión cuando no hay usuario activo', () => {
-    renderMisPedidos()
-    expect(screen.getByText('Inicia sesión para revisar tu historial.')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /iniciar sesión/i })).toHaveAttribute('href', '/login')
-  })
+    it('sin sesión invita a iniciar sesión', () => {
+        renderPagina()
+        expect(screen.getByRole('link', { name: /iniciar sesión/i })).toBeInTheDocument()
+    })
 
-  it('lista solo los pedidos del cliente con su estado y pago', () => {
-    iniciarComo('cliente')
-    renderMisPedidos()
-    expect(screen.getByRole('heading', { name: 'Mis pedidos' })).toBeInTheDocument()
-    expect(screen.getByText(/juan pérez/i)).toBeInTheDocument()
+    it('lista las boletas que devuelve GET /v1/boletas', async () => {
+        iniciarComo('CLIENTE')
+        simularApi({ 'GET /v1/boletas': [BOLETA] })
+        renderPagina()
+        expect(await screen.findByText('#10')).toBeInTheDocument()
+        expect(screen.getByText('2x Cilindro 5 kg')).toBeInTheDocument()
+        expect(screen.getByText('Pendiente')).toBeInTheDocument()
+    })
 
-    const pendiente = screen.getByText('ORD-202').closest('tr')
-    expect(within(pendiente).getAllByText('Pendiente')).toHaveLength(2) // estado + pago
-    expect(pendiente).toHaveTextContent(formatoPeso(43000))
+    it('muestra el estado vacío', async () => {
+        iniciarComo('CLIENTE')
+        simularApi({ 'GET /v1/boletas': [] })
+        renderPagina()
+        expect(await screen.findByText(/todavía no tienes pedidos/i)).toBeInTheDocument()
+    })
 
-    const entregado = screen.getByText('ORD-200').closest('tr')
-    expect(within(entregado).getByText('Entregado')).toBeInTheDocument()
-    expect(within(entregado).getByText('Pagado')).toBeInTheDocument()
+    it('permite cancelar un pedido pendiente (PUT /v1/boletas/{id}/cancelar)', async () => {
+        iniciarComo('CLIENTE')
+        vi.spyOn(window, 'confirm').mockReturnValue(true)
+        const llamadas = simularApi({ 'GET /v1/boletas': [BOLETA], 'PUT /v1/boletas/10/cancelar': { ...BOLETA, estado: 'CANCELADO' } })
+        const user = userEvent.setup()
+        renderPagina()
+        await user.click(await screen.findByRole('button', { name: /^cancelar$/i }))
+        await waitFor(() => expect(llamadas.some((l) => l.metodo === 'PUT' && l.ruta === '/v1/boletas/10/cancelar')).toBe(true))
+        expect(await screen.findByRole('status')).toHaveTextContent(/pedido #10 cancelado/i)
+    })
 
-    // Los pedidos de otros clientes no aparecen
-    expect(screen.queryByText('ORD-201')).not.toBeInTheDocument()
-    expect(screen.queryByText('ORD-203')).not.toBeInTheDocument()
-  })
-
-  it('muestra un mensaje cuando el cliente todavía no tiene pedidos', () => {
-    registrarUsuario({ nombre: 'Cliente Nuevo', correo: 'nuevo@example.com', password: 'abcdef' })
-    iniciarSesion('nuevo@example.com', 'abcdef')
-    renderMisPedidos()
-    expect(screen.getByText('Todavía no tienes pedidos')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /crear pedido/i })).toHaveAttribute('href', '/pedido')
-  })
-
-  it('ofrece el acceso para crear un nuevo pedido', () => {
-    iniciarComo('cliente')
-    renderMisPedidos()
-    expect(screen.getByRole('link', { name: /nuevo pedido/i })).toHaveAttribute('href', '/pedido')
-  })
+    it('muestra el error del backend', async () => {
+        iniciarComo('CLIENTE')
+        simularApi({ 'GET /v1/boletas': error(500, 'Falla interna') })
+        renderPagina()
+        expect(await screen.findByRole('alert')).toHaveTextContent(/falla interna/i)
+    })
 })

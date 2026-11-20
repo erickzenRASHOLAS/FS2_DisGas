@@ -13,7 +13,7 @@ function Layout() {
             {/*
         flex-grow hace que este contenedor principal empuje al Footer hacia abajo.
         <Outlet /> es el componente mágico de React Router donde se inyectará
-        el contenido de cada vista (PideTuCilindro, Operadora, etc.)
+        el contenido de cada vista (Pedido, Órdenes, Inventario, etc.)
       */}
             <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <Outlet />
