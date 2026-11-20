@@ -1,0 +1,322 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/pages/Operadora.jsx</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/pages</a> Operadora.jsx</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>40/40</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">90.9% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>20/22</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>17/17</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>31/31</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line high'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">112x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useEffect, useState } from 'react';
+import { asignarRepartidor, obtenerPedidos, obtenerRepartidores, actualizarEstadoPedido } from '../services/datosMock';
+&nbsp;
+const formatoPeso = (monto) =&gt; new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Number(monto ?? <span class="branch-1 cbranch-no" title="branch not covered" >0)</span>);
+const colorEstado = (estado) =&gt; estado === 'Entregado' ? 'bg-green-100 text-green-800' : estado === 'En Ruta' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800';
+&nbsp;
+export default function Operadora() {
+  const [pedidos, setPedidos] = useState([]);
+  const [repartidores, setRepartidores] = useState([]);
+  const [seleccionados, setSeleccionados] = useState({});
+  const [mensaje, setMensaje] = useState('');
+&nbsp;
+  const cargarDatos = () =&gt; {
+    const lista = obtenerPedidos();
+    setPedidos(lista);
+    setRepartidores(obtenerRepartidores());
+    setSeleccionados(Object.fromEntries(lista.map((p) =&gt; [p.id, p.repartidorId ? String(p.repartidorId) : ''])));
+  };
+&nbsp;
+  useEffect(() =&gt; { cargarDatos(); }, []);
+&nbsp;
+  const manejarAsignacion = (pedidoId) =&gt; {
+    const repartidorId = seleccionados[pedidoId];
+    if (!repartidorId) {
+      setMensaje('Selecciona un repartidor antes de asignar el pedido.');
+      return;
+    }
+    const resultado = asignarRepartidor(pedidoId, repartidorId);
+    setMensaje(resultado.mensaje);
+    cargarDatos();
+  };
+&nbsp;
+  const cambiarEstado = (pedido, nuevoEstado) =&gt; {
+    const resultado = actualizarEstadoPedido(pedido.id, nuevoEstado);
+    setMensaje(resultado.mensaje);
+    cargarDatos();
+  };
+&nbsp;
+  const pendientes = pedidos.filter((p) =&gt; p.estado !== 'Entregado').length;
+  const asignados = pedidos.filter((p) =&gt; p.repartidorId &amp;&amp; p.estado !== 'Entregado').length;
+&nbsp;
+  return (
+    &lt;section className="space-y-6"&gt;
+      &lt;div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"&gt;
+        &lt;div&gt;&lt;p className="text-sm font-bold uppercase tracking-widest text-amber-600"&gt;Operaciones&lt;/p&gt;&lt;h1 className="mt-1 text-3xl font-black text-blue-950"&gt;Panel de despacho&lt;/h1&gt;&lt;p className="mt-2 text-slate-600"&gt;Revisa los pedidos, asigna un repartidor y actualiza su estado.&lt;/p&gt;&lt;/div&gt;
+        &lt;button onClick={cargarDatos} className="rounded-xl border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 hover:bg-slate-50"&gt;Actualizar lista&lt;/button&gt;
+      &lt;/div&gt;
+&nbsp;
+      &lt;div className="grid grid-cols-1 gap-4 sm:grid-cols-3"&gt;
+        &lt;div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"&gt;&lt;p className="text-sm text-slate-500"&gt;Pedidos registrados&lt;/p&gt;&lt;p className="mt-2 text-3xl font-black text-blue-950"&gt;{pedidos.length}&lt;/p&gt;&lt;/div&gt;
+        &lt;div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"&gt;&lt;p className="text-sm text-slate-500"&gt;Pendientes de entrega&lt;/p&gt;&lt;p className="mt-2 text-3xl font-black text-amber-600"&gt;{pendientes}&lt;/p&gt;&lt;/div&gt;
+        &lt;div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"&gt;&lt;p className="text-sm text-slate-500"&gt;Pedidos asignados activos&lt;/p&gt;&lt;p className="mt-2 text-3xl font-black text-green-700"&gt;{asignados}&lt;/p&gt;&lt;/div&gt;
+      &lt;/div&gt;
+&nbsp;
+      {mensaje &amp;&amp; &lt;div role="status" className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm font-semibold text-blue-900"&gt;{mensaje}&lt;/div&gt;}
+&nbsp;
+      &lt;div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"&gt;
+        &lt;div className="border-b border-slate-200 bg-slate-50 px-5 py-4"&gt;&lt;h2 className="text-lg font-bold text-blue-950"&gt;Pedidos&lt;/h2&gt;&lt;p className="text-sm text-slate-500"&gt;Los cambios quedan guardados en el navegador de demostración.&lt;/p&gt;&lt;/div&gt;
+        &lt;div className="overflow-x-auto"&gt;
+          &lt;table className="w-full min-w-[900px] text-left text-sm"&gt;
+            &lt;thead className="bg-blue-950 text-white"&gt;&lt;tr&gt;{['Orden / fecha', 'Cliente y dirección', 'Productos', 'Total', 'Estado', 'Repartidor', 'Acciones'].map((t) =&gt; &lt;th key={t} className="px-4 py-3 font-bold"&gt;{t}&lt;/th&gt;)}&lt;/tr&gt;&lt;/thead&gt;
+            &lt;tbody className="divide-y divide-slate-100"&gt;
+              {pedidos.map((pedido) =&gt; &lt;tr key={pedido.id} className="hover:bg-slate-50"&gt;
+                &lt;td className="px-4 py-4"&gt;&lt;p className="font-bold text-blue-950"&gt;{pedido.id}&lt;/p&gt;&lt;p className="text-xs text-slate-500"&gt;{pedido.fecha}&lt;/p&gt;&lt;/td&gt;
+                &lt;td className="px-4 py-4"&gt;&lt;p className="font-semibold text-slate-800"&gt;{pedido.cliente}&lt;/p&gt;&lt;p className="max-w-48 text-xs text-slate-500"&gt;{pedido.direccion}&lt;/p&gt;&lt;p className="text-xs text-slate-500"&gt;{pedido.telefono}&lt;/p&gt;&lt;/td&gt;
+                &lt;td className="max-w-52 px-4 py-4"&gt;{pedido.producto}&lt;/td&gt;
+                &lt;td className="whitespace-nowrap px-4 py-4 font-semibold"&gt;{formatoPeso(pedido.total)}&lt;/td&gt;
+                &lt;td className="px-4 py-4"&gt;&lt;span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${colorEstado(pedido.estado)}`}&gt;{pedido.estado}&lt;/span&gt;&lt;p className="mt-1 text-xs text-slate-500"&gt;{pedido.pagoRegistrado ? 'Pago registrado' : 'Pago pendiente'}&lt;/p&gt;&lt;/td&gt;
+                &lt;td className="px-4 py-4"&gt;&lt;label className="sr-only" htmlFor={`rep-${pedido.id}`}&gt;Repartidor para {pedido.id}&lt;/label&gt;&lt;select id={`rep-${pedido.id}`} value={seleccionados[pedido.id] ?? <span class="branch-1 cbranch-no" title="branch not covered" >''} o</span>nChange={(e) =&gt; setSeleccionados((actual) =&gt; ({ ...actual, [pedido.id]: e.target.value }))} className="w-44 rounded-lg border border-slate-300 bg-white px-2 py-2"&gt;&lt;option value=""&gt;Sin asignar&lt;/option&gt;{repartidores.map((r) =&gt; &lt;option key={r.id} value={r.id}&gt;{r.nombre}&lt;/option&gt;)}&lt;/select&gt;&lt;/td&gt;
+                &lt;td className="px-4 py-4"&gt;&lt;div className="flex flex-col gap-2"&gt;&lt;button onClick={() =&gt; manejarAsignacion(pedido.id)} disabled={pedido.estado === 'Entregado'} className="rounded-lg bg-blue-950 px-3 py-2 font-bold text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-40"&gt;Asignar&lt;/button&gt;&lt;select aria-label={`Estado del pedido ${pedido.id}`} value={pedido.estado} onChange={(e) =&gt; cambiarEstado(pedido, e.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-2" disabled={pedido.estado === 'Entregado'}&gt;&lt;option&gt;Pendiente&lt;/option&gt;&lt;option&gt;En Ruta&lt;/option&gt;{pedido.estado === 'Entregado' &amp;&amp; &lt;option&gt;Entregado&lt;/option&gt;}&lt;/select&gt;&lt;/div&gt;&lt;/td&gt;
+              &lt;/tr&gt;)}
+              {pedidos.length === 0 &amp;&amp; &lt;tr&gt;&lt;td colSpan="7" className="px-4 py-12 text-center text-slate-500"&gt;Todavía no hay pedidos registrados.&lt;/td&gt;&lt;/tr&gt;}
+            &lt;/tbody&gt;
+          &lt;/table&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+  );
+}
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-10-14T00:18:30.962Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
+</html>
+    

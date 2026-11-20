@@ -50,8 +50,8 @@ function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link className="hover:text-yellow-400 hover:underline transition" to="/operadora">
-                                    Panel Operadora
+                                <Link className="hover:text-yellow-400 hover:underline transition" to="/ordenes">
+                                    Panel de órdenes
                                 </Link>
                             </li>
                             <li>

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Navigate, Route, Routes, Link } from 'react-router-dom';
 import Layout from './components/Layout';
 import Inicio from './pages/Inicio';
@@ -7,26 +8,21 @@ import Pedido from './pages/Pedido';
 import MisPedidos from './pages/MisPedidos';
 import Perfil from './pages/Perfil';
 import EditarPerfil from './pages/EditarPerfil';
-import RutasRepartidor from './pages/RutasRepartidos';
-import Operadora from './pages/Operadora';
+import Ordenes from './pages/Ordenes';
 import AdminUsuarios from './pages/AdminUsuario';
 import Inventario from './pages/Inventario';
-import { obtenerUsuarioActual } from './services/datosMock';
+import { useSesion } from './services/useSesion';
+import { obtenerUsuarioActual } from './services/sesion';
+import { perfilApi } from './services/servicios';
 
+// Página de inicio de cada rol (a donde se redirige a quien intenta entrar a algo que no le corresponde).
+const INICIO_POR_ROL = { CLIENTE: '/mis-pedidos', VENDEDOR: '/ordenes', ADMINISTRADOR: '/admin' };
+
+/** Guardia de rutas: sin sesión → /login; con sesión pero sin el rol → a su propia página de inicio. */
 function RequireRole({ roles, children }) {
-    const usuario = obtenerUsuarioActual();
+    const usuario = useSesion();
     if (!usuario) return <Navigate to="/login" replace />;
-    const rol = String(usuario.rol ?? '').toLowerCase();
-    if (!roles.includes(rol)) {
-        const inicioPorRol = {
-            cliente: '/mis-pedidos',
-            repartidor: '/repartidor',
-            operadora: '/operadora',
-            admin: '/admin',
-            administrador: '/admin',
-        };
-        return <Navigate to={inicioPorRol[rol] ?? '/'} replace />;
-    }
+    if (!roles.includes(usuario.rol)) return <Navigate to={INICIO_POR_ROL[usuario.rol] ?? '/'} replace />;
     return children;
 }
 
@@ -43,22 +39,26 @@ function NoEncontrado() {
 }
 
 export default function App() {
+    // Al cargar la app (o recargar con F5) se confirma la sesión guardada con el backend.
+    // Si el token ya no sirve, api.js intenta renovarlo y, si no se puede, cierra la sesión.
+    useEffect(() => {
+        if (obtenerUsuarioActual()) perfilApi.ver().catch(() => {});
+    }, []);
+
     return (
         <Routes>
             <Route path="/" element={<Inicio />} />
             <Route path="/login" element={<Login />} />
             <Route path="/registro" element={<Registro />} />
             <Route element={<Layout />}>
-                <Route path="/pedido" element={<RequireRole roles={['cliente', 'administrador', 'admin']}><Pedido /></RequireRole>} />
-                <Route path="/mis-pedidos" element={<RequireRole roles={['cliente']}><MisPedidos /></RequireRole>} />
-                <Route path="/perfil" element={<RequireRole roles={['cliente', 'repartidor', 'operadora', 'administrador', 'admin']}><Perfil /></RequireRole>} />
-                <Route path="/editar-perfil" element={<RequireRole roles={['cliente', 'repartidor', 'operadora', 'administrador', 'admin']}><EditarPerfil /></RequireRole>} />
-                <Route path="/repartidor" element={<RequireRole roles={['repartidor']}><RutasRepartidor /></RequireRole>} />
-                <Route path="/rutas-repartidor" element={<RequireRole roles={['repartidor']}><RutasRepartidor /></RequireRole>} />
-                <Route path="/operadora" element={<RequireRole roles={['operadora', 'administrador', 'admin']}><Operadora /></RequireRole>} />
-                <Route path="/admin" element={<RequireRole roles={['administrador', 'admin']}><AdminUsuarios /></RequireRole>} />
-                <Route path="/admin-usuario" element={<RequireRole roles={['administrador', 'admin']}><AdminUsuarios /></RequireRole>} />
-                <Route path="/inventario" element={<RequireRole roles={['administrador', 'admin']}><Inventario /></RequireRole>} />
+                <Route path="/pedido" element={<RequireRole roles={['CLIENTE', 'ADMINISTRADOR']}><Pedido /></RequireRole>} />
+                <Route path="/mis-pedidos" element={<RequireRole roles={['CLIENTE']}><MisPedidos /></RequireRole>} />
+                <Route path="/perfil" element={<RequireRole roles={['CLIENTE', 'ADMINISTRADOR']}><Perfil /></RequireRole>} />
+                <Route path="/editar-perfil" element={<RequireRole roles={['CLIENTE', 'ADMINISTRADOR']}><EditarPerfil /></RequireRole>} />
+                <Route path="/ordenes" element={<RequireRole roles={['VENDEDOR', 'ADMINISTRADOR']}><Ordenes /></RequireRole>} />
+                <Route path="/inventario" element={<RequireRole roles={['VENDEDOR', 'ADMINISTRADOR']}><Inventario /></RequireRole>} />
+                <Route path="/admin" element={<RequireRole roles={['ADMINISTRADOR']}><AdminUsuarios /></RequireRole>} />
+                <Route path="/admin-usuario" element={<RequireRole roles={['ADMINISTRADOR']}><AdminUsuarios /></RequireRole>} />
                 <Route path="*" element={<NoEncontrado />} />
             </Route>
         </Routes>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { obtenerUsuarioActual } from '../services/datosMock';
+import { obtenerUsuarioActual, etiquetaRol } from '../services/sesion';
+import { perfilApi } from '../services/servicios';
 
 const Perfil = () => {
-    // Estado para almacenar los datos del usuario cargados dinámicamente desde el mock[cite: 1]
+    // Estado para almacenar los datos del usuario
     const [userData, setUserData] = useState({
         nombre: '',
         rol: '',
@@ -12,11 +13,12 @@ const Perfil = () => {
         direccion: ''
     });
 
-    // Cargar los datos del usuario logueado o activo en el mock central
+    // Se muestran primero los datos de la sesión y luego se refrescan con GET /v1/perfil
     useEffect(() => {
         const usuarioActivo = obtenerUsuarioActual();
         if (usuarioActivo) {
             setUserData(usuarioActivo);
+            perfilApi.ver().then(setUserData).catch(() => {});
         }
     }, []);
 
@@ -45,7 +47,7 @@ const Perfil = () => {
                             <i className="ph ph-user-fill"></i>
                         </div>
                         <h1 className="text-2xl font-extrabold text-white">{userData.nombre || 'Cargando...'}</h1>
-                        <p className="text-slate-300 text-sm mt-1">{userData.rol || 'Cliente'}</p>
+                        <p className="text-slate-300 text-sm mt-1">{etiquetaRol(userData.rol) || 'Cliente'}</p>
                     </div>
 
                     {/* Datos del Perfil[cite: 1] */}
