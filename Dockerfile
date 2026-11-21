@@ -1,27 +1,29 @@
 
-# Etapa 1: construir la aplicación React
+# Etapa 1: construir React con Vite
 FROM node:22-alpine AS build
 
 WORKDIR /app
 
-# Copiar dependencias
-COPY package*.json ./
-RUN npm ci
+# Copiar archivos de dependencias
+COPY package.json package-lock.json ./
 
-# Copiar el código del frontend
+# Instalar dependencias incluyendo Vite
+RUN npm ci --include=dev
+
+# Copiar el código fuente
 COPY . .
 
-# Variables disponibles durante la compilación de Vite
+# Variables de construcción
 ARG VITE_BASE_PATH=/
 ARG VITE_API_URL=http://localhost:8080
 
 ENV VITE_BASE_PATH=${VITE_BASE_PATH}
 ENV VITE_API_URL=${VITE_API_URL}
 
-# Generar archivos de producción
-RUN npm run build
+# Comprobar que Vite existe y compilar
+RUN test -x node_modules/.bin/vite && npm run build
 
-# Etapa 2: servir React mediante Nginx
+# Etapa 2: servidor Nginx
 FROM nginx:alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf

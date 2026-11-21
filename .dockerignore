@@ -1,0 +1,20 @@
+
+# Excluir dependencias instaladas en Windows
+node_modules
+**/node_modules
+
+# Excluir archivos generados
+dist
+coverage
+.vite
+
+# Excluir archivos del editor
+.git
+.idea
+.vscode
+*.log
+
+# Excluir configuraciones locales
+.env
+.env.*
+!.env.example
